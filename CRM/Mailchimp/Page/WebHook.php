@@ -137,6 +137,12 @@ class CRM_Mailchimp_Page_WebHook extends CRM_Core_Page {
     CRM_Mailchimp_Utils::checkDebug("Webhook: $method with request data: " . json_encode($request_data));
     $this->$method();
 
+    // Allow other integrations the opportunity to act on this webhook.
+    CRM_Utils_Hook::singleton()->invoke(
+        2, $request_data, $this->contact_id,
+        $dummy, $dummy, $dummy, $dummy,
+        'mailchimp_webhook');
+
     // re-set the post hooks.
     CRM_Mailchimp_Utils::$post_hook_enabled = TRUE;
     // Return OK response.

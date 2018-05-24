@@ -245,6 +245,9 @@ class CRM_Mailchimp_Utils {
 
       try {
         $test_warnings = CRM_Mailchimp_Utils::configureList($details['list_id'], $dry_run=TRUE);
+        if (!$test_warnings) {
+          $test_warnings = [];
+        }
         foreach ($test_warnings as $_) {
           $warnings []= $message_prefix . $_;
         }

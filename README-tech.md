@@ -199,7 +199,14 @@ Tests
 - `MailchimpApiMockTest::testCheckGroupsConfig`
 - `MailchimpApiMockTest::testConfigureList`
 
+## `hook_mailchimp_webhook`
 
+If you have another module that needs to do something with a webhook, you can
+implement this hook like this:
+
+    function mymodule_mailchimp_webhook($request_data, $contact_id) {
+        // ... do your stuff ...
+    }
 
 # Posthook used to immediately add/remove  a single person.
 
