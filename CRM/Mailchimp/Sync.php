@@ -243,7 +243,7 @@ class CRM_Mailchimp_Sync {
       // exists ;-)
       'is_opt_out' => 0,
       'do_not_email' => 0,
-      'on_hold' => 0,
+      // 'on_hold' => 0, See issue #328
       'is_deceased' => 0,
       'group' => $this->membership_group_id,
       'return' => ['first_name', 'last_name', 'group'],
