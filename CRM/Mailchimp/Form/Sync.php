@@ -123,7 +123,7 @@ class CRM_Mailchimp_Form_Sync extends CRM_Core_Form {
   /**
    * Set up the queue.
    */
-  public static function getRunner($skipEndUrl = FALSE, $dry_run = FALSE) {
+  public static function getRunner($skipEndUrl = FALSE, $dry_run = FALSE, $single_group=FALSE) {
     // Setup the Queue
     $queue = CRM_Queue_Service::singleton()->create(array(
       'name'  => self::QUEUE_NAME,
@@ -145,6 +145,11 @@ class CRM_Mailchimp_Form_Sync extends CRM_Core_Form {
       if (empty($details['list_name'])) {
         // This list has been deleted at Mailchimp, or for some other reason we
         // could not access its name. Best not to sync it.
+        continue;
+      }
+
+      if ($single_group !== FALSE && $single_group != $group_id) {
+        // We've been called to only sync a single group.
         continue;
       }
 

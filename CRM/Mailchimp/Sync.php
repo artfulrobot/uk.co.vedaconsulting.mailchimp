@@ -99,6 +99,8 @@ class CRM_Mailchimp_Sync {
    * @return int   number of contacts collected.
    */
   public function collectMailchimp($mode) {
+    // This can take a long time...
+    set_time_limit(0);
     CRM_Mailchimp_Utils::checkDebug('Start-CRM_Mailchimp_Form_Sync syncCollectMailchimp $this->list_id= ', $this->list_id);
     if (!in_array($mode, ['pull', 'push'])) {
       throw new InvalidArgumentException(__FUNCTION__ . " expects push/pull but called with '$mode'.");
@@ -211,6 +213,8 @@ class CRM_Mailchimp_Sync {
    * @return int number of contacts collected.
    */
   public function collectCiviCrm($mode) {
+    // This can take a long time...
+    set_time_limit(0);
     CRM_Mailchimp_Utils::checkDebug('Start-CRM_Mailchimp_Form_Sync syncCollectCiviCRM $this->list_id= ', $this->list_id);
     if (!in_array($mode, ['pull', 'push'])) {
       throw new InvalidArgumentException(__FUNCTION__ . " expects push/pull but called with '$mode'.");
@@ -369,6 +373,8 @@ class CRM_Mailchimp_Sync {
    * - failures (duplicate contacts in CiviCRM)
    */
   public function matchMailchimpMembersToContacts() {
+    // This can take a long time...
+    set_time_limit(0);
     // Ensure we have the mailchimp_log table.
     $dao = CRM_Core_DAO::executeQuery(
       "CREATE TABLE IF NOT EXISTS mailchimp_log (
@@ -534,6 +540,8 @@ class CRM_Mailchimp_Sync {
    * @return array ['updates' => INT, 'unsubscribes' => INT]
    */
   public function updateMailchimpFromCivi() {
+    // This can take a long time...
+    set_time_limit(0);
     CRM_Mailchimp_Utils::checkDebug("updateMailchimpFromCivi for group #$this->membership_group_id");
     $operations = [];
     $api = CRM_Mailchimp_Utils::getMailchimpApi();
@@ -623,9 +631,11 @@ class CRM_Mailchimp_Sync {
       // Also split batches in blocks of MAILCHIMP_MAX_REQUEST_BATCH_SIZE to
       // avoid memory limit problems.
       $batches = array_chunk($operations, MAILCHIMP_MAX_REQUEST_BATCH_SIZE, TRUE);
+      $done = 0;
       foreach ($batches as &$batch) {
-        CRM_Mailchimp_Utils::checkDebug("Batching " . count($batch) . " operations. ");
+        CRM_Mailchimp_Utils::checkDebug("Done $done, Adding batch of " . count($batch) . " operations. ");
         $api->batchAndWait($batch);
+        $done += count($batch);
       }
       unset($batch);
     }
@@ -683,6 +693,8 @@ class CRM_Mailchimp_Sync {
    * - remove
    */
   public function updateCiviFromMailchimp() {
+    // This can take a long time...
+    set_time_limit(0);
 
     // Ensure posthooks don't trigger while we make GroupContact changes.
     CRM_Mailchimp_Utils::$post_hook_enabled = FALSE;
@@ -792,6 +804,9 @@ class CRM_Mailchimp_Sync {
       else {
         // Unpack the interests reported by MC
         $mc_interests = unserialize($dao->interests);
+        if (!$mc_interests) {
+          $mc_interests = [];
+        }
         if ($dao->c_interests) {
           // Existing contact.
           $existing_contact_changed = TRUE;
@@ -842,6 +857,7 @@ class CRM_Mailchimp_Sync {
       LEFT OUTER JOIN tmp_mailchimp_push_m m ON m.cid_guess = c.contact_id
       WHERE m.email IS NULL;
       ");
+
     // Collect the contact_ids that need removing from the membership group.
     while ($dao->fetch()) {
       if (!$this->dry_run) {
@@ -865,8 +881,9 @@ class CRM_Mailchimp_Sync {
         }
       }
 
+      // xxx This is what I commented out for the Mailchimp → Civi pull
       if ($changes['removals']) {
-        // We have some contacts to add into groups...
+        // We have some contacts to remove into groups...
         foreach($changes['removals'] as $groupID => $contactIDs) {
           CRM_Contact_BAO_GroupContact::removeContactsFromGroup($contactIDs, $groupID, 'Admin', 'Removed');
         }

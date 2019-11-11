@@ -85,14 +85,26 @@ function civicrm_api3_mailchimp_getinterests($params) {
  * before they've ever been subscribed.
  *
  * @param array $params
+ *  - dry_run (FALSE)
+ *  - single_group (FALSE for all groups, or group_id for single group).
  * @return array API result descriptor
  * @see civicrm_api3_create_success
  * @see civicrm_api3_create_error
  * @throws API_Exception
- */ 
+ */
 function civicrm_api3_mailchimp_pushsync($params) {
   // Do push from CiviCRM to mailchimp
-  $runner = CRM_Mailchimp_Form_Sync::getRunner($skipEndUrl = TRUE);
+  $skipEndUrl = TRUE;
+  $single_group = FALSE;
+  if ((int) ($params['single_group'] ?? 0)) {
+    $single_group = (int) $params['single_group'];
+  }
+  $dry_run = FALSE;
+  if (($params['dry_run'] ?? FALSE)) {
+    $dry_run = TRUE;
+  }
+  $runner = CRM_Mailchimp_Form_Sync::getRunner($skipEndUrl, $dry_run, $single_group);
+
   if ($runner) {
     $result = $runner->runAll();
   }
